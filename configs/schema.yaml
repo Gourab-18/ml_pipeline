@@ -1,0 +1,187 @@
+# Data Schema Configuration
+# Defines feature names, types, missing value policies, and leakage indicators
+
+schema:
+  version: "1.0"
+  description: "Customer churn prediction feature schema"
+  last_updated: "2024-01-15"
+
+# Feature definitions
+features:
+  # Customer Demographics
+  customer_id:
+    type: "string"
+    description: "Unique customer identifier"
+    missing_policy: "forbidden"
+    leaky: false
+    
+  age:
+    type: "integer"
+    description: "Customer age in years"
+    missing_policy: "impute_median"
+    leaky: false
+    
+  gender:
+    type: "categorical"
+    description: "Customer gender"
+    categories: ["M", "F", "Other", "Unknown"]
+    missing_policy: "impute_mode"
+    leaky: false
+    
+  location_country:
+    type: "categorical"
+    description: "Customer country"
+    missing_policy: "impute_mode"
+    leaky: false
+    
+  # Subscription Information
+  subscription_type:
+    type: "categorical"
+    description: "Type of subscription plan"
+    categories: ["Basic", "Premium", "Enterprise"]
+    missing_policy: "forbidden"
+    leaky: false
+    
+  subscription_duration_days:
+    type: "integer"
+    description: "Days since subscription started"
+    missing_policy: "forbidden"
+    leaky: false
+    
+  monthly_revenue:
+    type: "float"
+    description: "Monthly subscription revenue"
+    missing_policy: "impute_zero"
+    leaky: false
+    
+  # Usage Analytics (Last 30 days)
+  login_frequency:
+    type: "integer"
+    description: "Number of logins in last 30 days"
+    missing_policy: "impute_zero"
+    leaky: false
+    
+  feature_usage_count:
+    type: "integer"
+    description: "Number of features used in last 30 days"
+    missing_policy: "impute_zero"
+    leaky: false
+    
+  session_duration_avg:
+    type: "float"
+    description: "Average session duration in minutes"
+    missing_policy: "impute_zero"
+    leaky: false
+    
+  page_views_total:
+    type: "integer"
+    description: "Total page views in last 30 days"
+    missing_policy: "impute_zero"
+    leaky: false
+    
+  # Support Interactions
+  support_tickets_count:
+    type: "integer"
+    description: "Number of support tickets in last 30 days"
+    missing_policy: "impute_zero"
+    leaky: false
+    
+  support_tickets_avg_resolution_days:
+    type: "float"
+    description: "Average resolution time for support tickets"
+    missing_policy: "impute_zero"
+    leaky: false
+    
+  # Payment History
+  payment_failures_count:
+    type: "integer"
+    description: "Number of payment failures in last 90 days"
+    missing_policy: "impute_zero"
+    leaky: false
+    
+  days_since_last_payment:
+    type: "integer"
+    description: "Days since last successful payment"
+    missing_policy: "impute_median"
+    leaky: false
+    
+  # Marketing Engagement
+  email_opens_count:
+    type: "integer"
+    description: "Number of marketing emails opened in last 30 days"
+    missing_policy: "impute_zero"
+    leaky: false
+    
+  email_clicks_count:
+    type: "integer"
+    description: "Number of marketing email clicks in last 30 days"
+    missing_policy: "impute_zero"
+    leaky: false
+    
+  # LEAKY FEATURES - Only available post-label
+  # These features should be excluded from training
+  churn_date:
+    type: "datetime"
+    description: "Actual churn date (if churned)"
+    missing_policy: "allow"
+    leaky: true
+    
+  cancellation_reason:
+    type: "categorical"
+    description: "Reason for cancellation"
+    categories: ["Price", "Features", "Support", "Competitor", "Other"]
+    missing_policy: "allow"
+    leaky: true
+    
+  final_billing_amount:
+    type: "float"
+    description: "Final billing amount before cancellation"
+    missing_policy: "allow"
+    leaky: true
+    
+  retention_offer_accepted:
+    type: "boolean"
+    description: "Whether customer accepted retention offer"
+    missing_policy: "allow"
+    leaky: true
+    
+  post_churn_support_contacts:
+    type: "integer"
+    description: "Support contacts after churn decision"
+    missing_policy: "allow"
+    leaky: true
+
+# Target variable
+target:
+  churn_probability:
+    type: "float"
+    description: "Probability of churning within 30 days"
+    range: [0.0, 1.0]
+    missing_policy: "forbidden"
+    leaky: false
+
+# Data quality constraints
+constraints:
+  max_missing_percentage: 0.3  # Max 30% missing values allowed
+  min_unique_values: 2  # Minimum unique values for categorical features
+  max_correlation_threshold: 0.95  # Max correlation between features
+  
+# Feature engineering rules
+feature_engineering:
+  # Temporal features
+  temporal_features:
+    - "days_since_subscription"
+    - "days_since_last_login"
+    - "days_since_last_payment"
+  
+  # Interaction features
+  interaction_features:
+    - "login_frequency * session_duration_avg"
+    - "support_tickets_count * support_tickets_avg_resolution_days"
+    - "email_opens_count * email_clicks_count"
+  
+  # Aggregation features
+  aggregation_features:
+    - "avg_monthly_revenue_3months"
+    - "max_support_tickets_6months"
+    - "trend_login_frequency_3months"

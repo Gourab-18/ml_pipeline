@@ -15,6 +15,9 @@ from tensorflow.keras.layers import StringLookup, Normalization
 import warnings
 
 
+
+# different types of classes created for different type of data transformations
+# all these are called and use in pipeline.py
 class NumericTransformer:
     """
     Numeric feature transformer with imputation and normalization.

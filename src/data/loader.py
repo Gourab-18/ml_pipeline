@@ -192,6 +192,7 @@ class DataLoader:
         return quality_report
 
 
+# calls DataLoader class which self assignes everything
 def load_data(path: str, schema_path: str = "configs/schema.yaml") -> pd.DataFrame:
     """
     Convenience function to load and validate data.
@@ -207,8 +208,10 @@ def load_data(path: str, schema_path: str = "configs/schema.yaml") -> pd.DataFra
     return loader.load_data(path)
 
 
+# when run in terminal this runs
 if __name__ == "__main__":
-    # Example usage
+
+    # instance of dataloader class created
     loader = DataLoader()
     
     # Generate sample data if it doesn't exist
@@ -220,11 +223,13 @@ if __name__ == "__main__":
     
     # Load and validate data
     try:
+        # yaml is converted to dictionary
         df = loader.load_data(sample_path)
         print(f"Successfully loaded {len(df)} rows and {len(df.columns)} columns")
         
         # Get quality report
         quality_report = loader.validate_data_quality(df)
+        # everything returns dictionary
         print(f"Data quality report:")
         print(f"  Total rows: {quality_report['total_rows']}")
         print(f"  Quality issues: {len(quality_report['quality_issues'])}")

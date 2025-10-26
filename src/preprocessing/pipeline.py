@@ -309,7 +309,7 @@ if __name__ == "__main__":
     loader = DataLoader("configs/schema.yaml")
     df = loader.load_data("data/sample.csv")
     
-    # Create and fit pipeline
+    # starts pipeline that processes data from loader by using transformers.py
     pipeline = create_preprocessing_pipeline()
     pipeline.fit_on(df)
     

@@ -5,6 +5,11 @@ Validates data against the schema defined in configs/schema.yaml and provides
 robust error handling for data quality issues.
 """
 
+
+# This page loads data validates it and then submits quality report
+# It takes input from schema.yaml file and then converts it into dataframe and validates it
+
+
 import pandas as pd
 import numpy as np
 import yaml
@@ -25,6 +30,8 @@ class DataLoader:
         """Load schema configuration."""
         if not os.path.exists(self.schema_path):
             raise FileNotFoundError(f"Schema file not found: {self.schema_path}")
+
+            # loads into python as a dictionary
             
         with open(self.schema_path, 'r') as f:
             return yaml.safe_load(f)
@@ -59,8 +66,16 @@ class DataLoader:
     
     def _validate_schema(self, df: pd.DataFrame) -> None:
         """Validate DataFrame against schema."""
+
         schema_features = self.schema.get('features', {})
         schema_target = self.schema.get('target', {})
+
+        print("I am printing schema features",schema_features)
+        print("I am printing schema target",schema_target)
+
+
+        # above we get as a map and use them whenever required
+
         
         # Check for required columns
         required_columns = list(schema_features.keys()) + list(schema_target.keys())
@@ -75,6 +90,8 @@ class DataLoader:
             print(f"Warning: Unexpected columns found: {sorted(unexpected_columns)}")
         
         # Validate each feature
+        print("-------------------------------------------------")
+        print("I am printing schema feature items -------",schema_features.items())
         for feature_name, feature_spec in schema_features.items():
             if feature_name in df.columns:
                 self._validate_feature(df, feature_name, feature_spec)

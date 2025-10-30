@@ -60,4 +60,4 @@ train-sample:
 dev-setup: setup-venv install
 	@echo "Development environment setup complete!"
 	@echo "Activate virtual environment: source venv/bin/activate"
-
+   

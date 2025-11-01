@@ -24,6 +24,8 @@ from src.models.train_utils import (
     train_tabular_ann,
     evaluate_model,
 )
+from src.metrics.calibration import select_best_calibrator
+from src.metrics.eval import evaluate_and_plot
 
 
 def _ensure_dir(path: str) -> None:
@@ -247,6 +249,53 @@ def run_kfold_cv(
     oof_csv_path = os.path.join(run_dir, "oof_predictions.csv")
     oof_df.to_csv(oof_csv_path, index=False)
 
+    # Fit calibrator on OOF predictions
+    print("\nFitting calibrator on OOF predictions...")
+    y_true_flat = y.astype(int).flatten()
+    oof_prob_flat = oof_probs.reshape(-1)
+    oof_logit_flat = oof_logits.reshape(-1)
+    
+    best_method, best_calibrator, cal_metrics = select_best_calibrator(
+        y_true_flat,
+        oof_prob_flat,
+        y_logits=oof_logit_flat,
+        metric='brier',
+        n_bins=10
+    )
+    
+    # Save calibrator if one was selected
+    calibrator_path = None
+    if best_calibrator is not None:
+        calibrator_path = os.path.join(run_dir, "calibrator.pkl")
+        best_calibrator.save(calibrator_path)
+        print(f"✅ Saved best calibrator ({best_method}) to {calibrator_path}")
+    
+    # Add calibrated probabilities to OOF dataframe
+    if best_calibrator is not None:
+        if best_method == 'platt':
+            oof_df['oof_prob_calibrated'] = best_calibrator.predict_proba(oof_logit_flat)
+        else:
+            oof_df['oof_prob_calibrated'] = best_calibrator.predict_proba(oof_prob_flat)
+        oof_df.to_csv(oof_csv_path, index=False)
+    
+    # Evaluate and plot metrics
+    eval_results = evaluate_and_plot(
+        y_true_flat,
+        oof_prob_flat,
+        output_dir=run_dir,
+        prefix="oof",
+        n_bins=10
+    )
+    
+    if best_calibrator is not None:
+        eval_results_cal = evaluate_and_plot(
+            y_true_flat,
+            oof_df['oof_prob_calibrated'].values,
+            output_dir=run_dir,
+            prefix="oof_calibrated",
+            n_bins=10
+        )
+    
     # Summary
     summary = {
         "run_dir": run_dir,
@@ -255,7 +304,17 @@ def run_kfold_cv(
         "oof_path": oof_csv_path,
         "fold_metrics": fold_metrics,
         "mean_accuracy": float(np.mean([m.get("accuracy", 0.0) for m in fold_metrics])) if fold_metrics else 0.0,
+        "calibration": {
+            "best_method": best_method,
+            "calibrator_path": calibrator_path,
+            "metrics": cal_metrics,
+            "uncalibrated_metrics": eval_results['metrics']
+        }
     }
+    
+    if best_calibrator is not None:
+        summary["calibration"]["calibrated_metrics"] = eval_results_cal['metrics']
+    
     _save_json(summary, os.path.join(run_dir, "summary.json"))
 
     return summary

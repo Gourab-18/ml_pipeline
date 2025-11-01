@@ -326,6 +326,11 @@ class FeatureSelector:
         """
         if not self.is_fitted:
             raise ValueError("Feature selector must be fitted before transform")
+
+
+    #  By using .copy(), you ensure:
+	#  The returned DataFrame is independent of the original.
+	# 	You can safely modify it later without affecting X.
         
         return X[self.selected_features].copy()
     

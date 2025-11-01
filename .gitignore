@@ -16,40 +16,43 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
 share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 MANIFEST
 
-# Virtual environments
+# Virtual Environments
 venv/
 env/
 ENV/
 env.bak/
 venv.bak/
-.venv/
-.env/
+.venv
 
 # PyCharm
 .idea/
+*.iml
+*.iws
+*.ipr
 
 # VS Code
 .vscode/
+*.code-workspace
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# pyenv
+.python-version
 
 # pytest
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 .tox/
-.nox/
-coverage.xml
-*.cover
-*.py,cover
 .hypothesis/
 
 # mypy
@@ -57,64 +60,220 @@ coverage.xml
 .dmypy.json
 dmypy.json
 
-# Pyre type checker
-.pyre/
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-# MLflow
-mlruns/
-mlartifacts/
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
 
-# Model artifacts
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ML Pipeline specific
+# Artifacts
 artifacts/
-models/
 *.pkl
 *.joblib
 *.h5
+*.hdf5
+*.ckpt
 *.pb
-*.tflite
+*.pth
+*.onnx
 
-# Data files (except sample data)
-data/*.csv
-data/*.parquet
-data/*.json
-!data/sample.csv
+# Model exports
+models/exported/
+saved_models/
+checkpoints/
 
-# Logs
-*.log
+# Training outputs
 logs/
+wandb/
+mlruns/
+tensorboard_logs/
+lightning_logs/
+runs/
 
-# OS
+# Data files (if large)
+data/raw/
+data/processed/
+*.csv
+!data/sample.csv  # Keep sample data if small
+*.parquet
+*.feather
+*.arrow
+
+# CV and experiment results
+cv_runs/
+experiments/
+outputs/
+results/
+
+# Release artifacts
+releases/*/
+!releases/.gitkeep
+*.zip
+*.tar.gz
+*.tar
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.out
+*.err
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+.cache/
+tmp/
+temp/
+
+# Coverage reports
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+.hypothesis/
+
+# Profiling
+*.prof
+*.lprof
+*.pstats
+
+# Documentation builds
+docs/_build/
+docs/.doctrees/
+site/
+
+# Local configuration
+config.local.yaml
+config.local.yml
+.env.local
+*.local
+
+# OS generated files
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db
+Desktop.ini
 
-# Temporary files
-*.tmp
-*.temp
-.tmp/
-.temp/
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# TensorFlow
-*.pb
-saved_model/
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
 
-# Weights & Biases
-wandb/
+# Sphinx documentation
+docs/_build/
+docs/_static/
+docs/_templates/
 
-# MLflow
-mlflow/
+# Database
+*.db
+*.sqlite
+*.sqlite3
 
-# Cache
-.cache/
-*.cache
+# Large files
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Specific to this project
+test_*.py.bak
+demo_*.py.bak
+*.orig
+test_fast_check.py
+test_quick_export.py

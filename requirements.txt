@@ -3,7 +3,9 @@ numpy>=1.21.0
 pandas>=1.3.0
 scikit-learn>=1.0.0
 torch>=1.12.0
-tensorflow>=2.8.0
+# Use tensorflow-cpu for lighter installation (no GPU dependencies)
+# tensorflow>=2.8.0  # Full TensorFlow (larger, includes GPU support)
+tensorflow-cpu>=2.13.0  # Lightweight CPU-only version (recommended)
 
 # Data processing
 scipy>=1.7.0

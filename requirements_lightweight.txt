@@ -1,0 +1,23 @@
+# Lightweight dependencies for serving (no TensorFlow required for sklearn models)
+
+# Core
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.0.0
+
+# Data
+numpy>=1.24.0
+pandas>=2.0.0
+
+# ML (no TensorFlow needed for sklearn serving)
+scikit-learn>=1.3.0
+
+# Optional: For tensorflow-cpu models
+# tensorflow-cpu>=2.13.0
+
+# Optional: For XGBoost/LightGBM models
+# xgboost>=2.0.0
+# lightgbm>=4.0.0
+
+# Calibration (pure sklearn, no TF)
+# Uses sklearn only - already included above

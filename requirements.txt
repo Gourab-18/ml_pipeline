@@ -7,6 +7,10 @@ torch>=1.12.0
 # tensorflow>=2.8.0  # Full TensorFlow (larger, includes GPU support)
 tensorflow-cpu>=2.13.0  # Lightweight CPU-only version (recommended)
 
+# GBDT models
+xgboost>=1.6.0
+lightgbm>=3.3.0
+
 # Data processing
 scipy>=1.7.0
 matplotlib>=3.5.0

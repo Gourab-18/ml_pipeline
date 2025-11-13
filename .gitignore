@@ -277,3 +277,25 @@ demo_*.py.bak
 *.orig
 test_fast_check.py
 test_quick_export.py
+test_lightweight.py
+
+# Redundant demo scripts (keep only essential ones)
+demo_ann_simple.py
+demo_sklearn_baseline.py
+demo_lightweight.py
+demo_calibration_explainability.py
+run_and_compare.py
+
+# Temporary documentation files
+tasks_to_understand.md
+LIGHTWEIGHT_PREPROCESSING.md
+TEST_SUMMARY.md
+model_verification_report.txt
+
+# IDE specific
+.cursor/
+.claude/
+
+# Release files (not needed for development)
+create_release.sh
+RELEASE.md

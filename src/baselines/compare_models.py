@@ -91,9 +91,14 @@ def compare_models(
     # Load XGBoost results
     if xgb_results is None and xgb_run_dir:
         gbdt_results = load_gbdt_results(xgb_run_dir)
-        if gbdt_results and 'results' in gbdt_results:
-            xgb_results = gbdt_results['results'].get('xgb')
-        elif xgb_results is None:
+        if gbdt_results:
+            # Check if results are nested under 'results' key
+            if 'results' in gbdt_results:
+                xgb_results = gbdt_results['results'].get('xgb')
+            # Or if 'xgb' is at top level
+            elif 'xgb' in gbdt_results:
+                xgb_results = gbdt_results.get('xgb')
+        if xgb_results is None:
             # Try loading from separate XGB run
             xgb_results = load_cv_results(xgb_run_dir)
     
@@ -115,9 +120,14 @@ def compare_models(
     # Load LightGBM results
     if lgb_results is None and lgb_run_dir:
         gbdt_results = load_gbdt_results(lgb_run_dir)
-        if gbdt_results and 'results' in gbdt_results:
-            lgb_results = gbdt_results['results'].get('lgb')
-        elif lgb_results is None:
+        if gbdt_results:
+            # Check if results are nested under 'results' key
+            if 'results' in gbdt_results:
+                lgb_results = gbdt_results['results'].get('lgb')
+            # Or if 'lgb' is at top level
+            elif 'lgb' in gbdt_results:
+                lgb_results = gbdt_results.get('lgb')
+        if lgb_results is None:
             # Try loading from separate LGB run
             lgb_results = load_cv_results(lgb_run_dir)
     

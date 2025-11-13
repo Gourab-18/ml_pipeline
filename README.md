@@ -440,6 +440,12 @@ export_from_cv_run(
 
 ### Model Comparison
 
+**Automatic comparison** (after `make train-full`):
+- Comparison table is automatically generated and printed
+- Saved to `artifacts/cv/<run_name>/model_comparison.csv`
+
+**Manual comparison**:
+
 ```python
 from src.baselines.xgb_lgb import run_gbdt_cv
 from src.baselines.compare_models import compare_models
@@ -453,6 +459,22 @@ comparison = compare_models(
     xgb_run_dir="artifacts/cv/gbdt_run"
 )
 print(comparison)
+```
+
+**Or use the standalone script**:
+```bash
+# Compare latest runs
+python compare_models.py --latest
+
+# Compare specific runs
+python compare_models.py artifacts/cv/run1 artifacts/cv/run1
+
+# Compare all matching runs
+python compare_models.py --all
+
+# Or via Makefile
+make compare
+make compare RUN_NAME=20240101_120000
 ```
 
 ### Explainability

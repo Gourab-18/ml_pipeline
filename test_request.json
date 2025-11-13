@@ -1,0 +1,23 @@
+{
+  "features": [
+    {
+      "customer_id": "TEST_001",
+      "age": 35,
+      "gender": "M",
+      "location_country": "USA",
+      "subscription_type": "Premium",
+      "subscription_duration_days": 180,
+      "monthly_revenue": 99.99,
+      "login_frequency": 15,
+      "feature_usage_count": 8,
+      "session_duration_avg": 45.5,
+      "page_views_total": 250,
+      "support_tickets_count": 1,
+      "support_tickets_avg_resolution_days": 2.0,
+      "payment_failures_count": 0,
+      "days_since_last_payment": 15,
+      "email_opens_count": 10,
+      "email_clicks_count": 5
+    }
+  ]
+}

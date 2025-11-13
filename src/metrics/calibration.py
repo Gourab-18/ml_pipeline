@@ -18,23 +18,15 @@ import os
 
 
 class PlattScaler:
-    """Platt scaling: fit a logistic regression on logits to calibrate probabilities."""
-    
+
+         # basically used to convert numbers into some sort of probabilities
+
     def __init__(self):
         self.calibrator = LogisticRegression(max_iter=1000, solver='lbfgs')
         self.is_fitted = False
     
     def fit(self, logits: np.ndarray, y_true: np.ndarray) -> 'PlattScaler':
-        """
-        Fit Platt scaler on logits and true labels.
-        
-        Args:
-            logits: Raw logit predictions (shape: (n_samples,))
-            y_true: True binary labels (shape: (n_samples,))
-        
-        Returns:
-            Self for method chaining
-        """
+
         if logits.ndim > 1:
             logits = logits.flatten()
         if y_true.ndim > 1:
@@ -45,15 +37,7 @@ class PlattScaler:
         return self
     
     def predict_proba(self, logits: np.ndarray) -> np.ndarray:
-        """
-        Predict calibrated probabilities from logits.
-        
-        Args:
-            logits: Raw logit predictions (shape: (n_samples,))
-        
-        Returns:
-            Calibrated probabilities (shape: (n_samples,))
-        """
+
         if not self.is_fitted:
             raise ValueError("PlattScaler must be fitted before predict_proba")
         

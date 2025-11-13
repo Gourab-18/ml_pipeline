@@ -1,12 +1,5 @@
-"""
-PyTorch Tabular ANN for binary classification.
-
-This module implements a flexible ANN architecture using PyTorch with:
-- Embedding layers for categorical features
-- Dense layers for numeric features
-- Configurable MLP trunk with dropout and L2 regularization
-- Works on macOS with Apple Silicon (MPS) acceleration
-"""
+# ann using Pytorch
+# performs regularization using L2
 
 import numpy as np
 import torch
@@ -19,16 +12,10 @@ import warnings
 
 
 class TabularDataset(Dataset):
-    """PyTorch Dataset for tabular data."""
 
     def __init__(self, X: np.ndarray, y: np.ndarray = None):
-        """
-        Initialize dataset.
+        # initialized and converted to torch tensors
 
-        Args:
-            X: Feature array (n_samples, n_features)
-            y: Target array (n_samples,)
-        """
         self.X = torch.FloatTensor(X)
         self.y = torch.FloatTensor(y).reshape(-1, 1) if y is not None else None
 
@@ -42,14 +29,8 @@ class TabularDataset(Dataset):
 
 
 class PyTorchANN(nn.Module):
-    """
-    PyTorch ANN model for tabular binary classification.
 
-    This model is designed to work with preprocessed tabular data where:
-    - Numeric features are already scaled
-    - Categorical features are one-hot encoded
-    - The preprocessing pipeline provides feature information
-    """
+# scaling and stuff
 
     def __init__(
         self,

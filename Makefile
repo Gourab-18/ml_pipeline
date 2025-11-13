@@ -1,10 +1,13 @@
-.PHONY: help install test lint format clean train-sample train-full evaluate export serve setup-venv
+.PHONY: help install test test-fast test-full test-ci lint format clean train-sample train-full evaluate export serve setup-venv
 
 # Default target
 help:
 	@echo "Available commands:"
 	@echo "  make install       - Install dependencies"
-	@echo "  make test          - Run tests with coverage"
+	@echo "  make test          - Run all tests with coverage (includes TF, slow)"
+	@echo "  make test-fast     - Run fast tests only (no TensorFlow, ~2s)"
+	@echo "  make test-full     - Run all tests including TensorFlow (slow)"
+	@echo "  make test-ci       - Run tests for CI (no strict coverage)"
 	@echo "  make lint          - Run linting"
 	@echo "  make format        - Format code"
 	@echo "  make clean         - Clean artifacts"
@@ -13,6 +16,7 @@ help:
 	@echo "  make evaluate      - Evaluate models from CV run"
 	@echo "  make export        - Export champion model from CV"
 	@echo "  make serve         - Start FastAPI serving server"
+	@echo "  make compare       - Compare models from CV runs"
 	@echo "  make setup-venv    - Setup virtual environment"
 
 # Setup virtual environment
@@ -26,13 +30,43 @@ install:
 	pip install -r requirements.txt
 	pip install -e .
 
-# Run tests with coverage
+# Run all tests with coverage (includes TensorFlow, slow)
 test:
-	pytest tests/ -v --cov=src --cov-report=html --cov-report=term --cov-fail-under=80
+	@if [ -d venv ]; then \
+		venv/bin/pytest tests/ -v --cov=src --cov-report=html --cov-report=term --cov-fail-under=80; \
+	else \
+		pytest tests/ -v --cov=src --cov-report=html --cov-report=term --cov-fail-under=80; \
+	fi
+
+# Run fast tests only (no TensorFlow, ~2 seconds)
+test-fast:
+	@echo "🚀 Running fast tests (no TensorFlow)..."
+	@if [ -d venv ]; then \
+		venv/bin/pytest tests/test_loader.py tests/test_lightweight_preprocessing.py \
+			tests/test_calibration.py tests/test_explainability.py \
+			-v --tb=short; \
+	else \
+		pytest tests/test_loader.py tests/test_lightweight_preprocessing.py \
+			tests/test_calibration.py tests/test_explainability.py \
+			-v --tb=short; \
+	fi
+
+# Run all tests including TensorFlow (slow, 5-30s for TF import)
+test-full:
+	@echo "🐢 Running all tests (including TensorFlow - may be slow)..."
+	@if [ -d venv ]; then \
+		venv/bin/pytest tests/ -v --cov=src --cov-report=html --cov-report=term --cov-fail-under=80; \
+	else \
+		pytest tests/ -v --cov=src --cov-report=html --cov-report=term --cov-fail-under=80; \
+	fi
 
 # Run tests (no coverage requirement, for CI)
 test-ci:
-	pytest tests/ -v --cov=src --cov-report=term
+	@if [ -d venv ]; then \
+		venv/bin/pytest tests/ -v --cov=src --cov-report=term; \
+	else \
+		pytest tests/ -v --cov=src --cov-report=term; \
+	fi
 
 # Run linting
 lint:
@@ -72,11 +106,12 @@ train-full:
 	@echo "  - LightGBM baseline"
 	@echo "  - Calibration and evaluation"
 	@echo ""
-	@python -c " \
+	@python3 -c " \
 from src.data.loader import DataLoader; \
 from src.preprocessing.lightweight_transformers import create_lightweight_pipeline; \
 from src.training.cv import run_kfold_cv; \
 from src.baselines.xgb_lgb import run_gbdt_cv; \
+from src.baselines.compare_models import compare_models; \
 import os; \
 print('📊 Loading data...'); \
 loader = DataLoader('configs/schema.yaml'); \
@@ -89,15 +124,26 @@ X, y = pipeline.transform(df); \
 feature_info = pipeline.get_feature_info(); \
 print('✅ Preprocessing complete:', X.shape); \
 print('🏋️  Training ANN with 5-fold CV...'); \
-summary = run_kfold_cv(X, y, feature_info, k_folds=5, seed=42, \
-    base_params={'epochs': 50, 'batch_size': 64}); \
+ann_summary = run_kfold_cv(X, y, feature_info, k_folds=5, seed=42, base_params={'epochs': 50, 'batch_size': 64}); \
 print('✅ ANN training complete!'); \
-print('📈 OOF ROC-AUC:', f\"{summary['metrics']['roc_auc']:.4f}\"); \
+cal_info = ann_summary.get('calibration', {}); \
+cal_metrics = cal_info.get('calibrated_metrics', cal_info.get('uncalibrated_metrics', {})); \
+print(f'📈 ANN OOF ROC-AUC: {cal_metrics.get(\"roc_auc\", 0.0):.4f}'); \
 print('🏋️  Training GBDT baselines...'); \
-gbdt_results = run_gbdt_cv(X, y, k_folds=5, seed=42); \
+gbdt_results = run_gbdt_cv(X, y, k_folds=5, seed=42, run_name=ann_summary['run_dir'].split('/')[-1]); \
 print('✅ GBDT training complete!'); \
+print(''); \
+print('=' * 70); \
+print('📊 MODEL COMPARISON'); \
+print('=' * 70); \
+comparison_df = compare_models(ann_run_dir=ann_summary['run_dir'], xgb_run_dir=gbdt_results['run_dir'], lgb_run_dir=gbdt_results['run_dir']); \
+print(comparison_df.to_string(index=False)); \
+print('=' * 70); \
+comparison_path = os.path.join(ann_summary['run_dir'], 'model_comparison.csv'); \
+comparison_df.to_csv(comparison_path, index=False); \
+print(f'✅ Comparison saved to: {comparison_path}'); \
 print('🎉 Full training pipeline completed!'); \
-print('📁 Artifacts saved to:', summary['run_dir']); \
+print('📁 Artifacts saved to:', ann_summary['run_dir']); \
 "
 
 # Evaluate models from CV run
@@ -109,7 +155,7 @@ evaluate:
 		echo "Available runs:"; \
 		ls -d artifacts/cv/*/ 2>/dev/null | sed 's|artifacts/cv/||' | sed 's|/||' || echo "  No CV runs found"; \
 	else \
-		python -c " \
+		python3 -c " \
 import json; \
 import os; \
 run_dir = f'artifacts/cv/$(RUN_NAME)'; \
@@ -142,7 +188,7 @@ export:
 			exit 1; \
 		fi; \
 		echo "Using latest run: $$LATEST_RUN"; \
-		python -c " \
+		python3 -c " \
 from src.models.export import export_from_cv_run; \
 import os; \
 run_dir = f'artifacts/cv/$$LATEST_RUN'; \
@@ -154,7 +200,7 @@ export_from_cv_run(run_dir, fold_idx, export_dir, version=version); \
 print(f'✅ Model exported to {export_dir}/{version}/'); \
 "; \
 	else \
-		python -c " \
+		python3 -c " \
 from src.models.export import export_from_cv_run; \
 import os; \
 run_dir = f'artifacts/cv/$(RUN_NAME)'; \
@@ -173,6 +219,17 @@ serve:
 	@echo "Server will start on http://localhost:8000"
 	@echo "Press Ctrl+C to stop"
 	@uvicorn src.serve.app:app --host 0.0.0.0 --port 8000
+
+# Compare models from CV runs
+compare:
+	@echo "📊 Comparing models..."
+	@if [ -z "$(RUN_NAME)" ]; then \
+		echo "Comparing latest runs..."; \
+		python3 compare_models.py --latest; \
+	else \
+		echo "Comparing run: $(RUN_NAME)"; \
+		python3 compare_models.py "artifacts/cv/$(RUN_NAME)" "artifacts/cv/$(RUN_NAME)"; \
+	fi
 
 # Development setup
 dev-setup: setup-venv install

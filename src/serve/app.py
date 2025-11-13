@@ -98,17 +98,25 @@ def load_model_state(model_dir: str, version: str = "1", model_type: str = "auto
             if calibrator_path.exists():
                 calibrator = pickle.load(open(calibrator_path, "rb"))
                 calibrator_method = "isotonic"  # Assume isotonic for sklearn
-            
+
+            # Load preprocessing pipeline if exists
+            pipeline_path = Path(model_dir) / version / "pipeline.pkl"
+            pipeline = None
+            if pipeline_path.exists():
+                pipeline = joblib.load(pipeline_path)
+                print(f"✅ Preprocessing pipeline loaded")
+
             metadata_path = Path(model_dir) / version / "metadata.json"
             metadata = {}
             if metadata_path.exists():
                 with open(metadata_path, 'r') as f:
                     metadata = json.load(f)
-            
+
             _model_state = {
                 'model': model,
                 'calibrator': calibrator,
                 'calibrator_method': calibrator_method,
+                'pipeline': pipeline,
                 'metadata': metadata,
                 'feature_info': metadata.get('feature_info', {}),
                 'model_type': 'sklearn'
@@ -262,19 +270,37 @@ async def predict(request: PredictRequest):
     calibrator = _model_state['calibrator']
     calibrator_method = _model_state['calibrator_method']
     feature_info = _model_state['feature_info']
-    
+    pipeline = _model_state.get('pipeline')
+
     try:
-        # Prepare inputs
-        inputs = prepare_inputs(request.features, feature_info)
-        
-        # Predict - handle both TensorFlow and sklearn models
         model_type = _model_state.get('model_type', 'tensorflow')
-        
-        if model_type == 'sklearn':
-            # sklearn model: expects 2D array
+
+        if model_type == 'sklearn' and pipeline is not None:
+            # sklearn model with preprocessing pipeline: handle raw features
+            import pandas as pd
+
+            # Convert raw features to DataFrame
+            df = pd.DataFrame(request.features)
+
+            # Add dummy target column (required by pipeline but not used)
+            df['churn_probability'] = 0.0
+
+            # Preprocess using pipeline
+            X_array, _ = pipeline.transform(df)
+
+            # Predict
+            predictions = model.predict_proba(X_array)[:, 1]  # Probability of class 1
+            probas = predictions
+            logits = np.log(probas / (1 - probas + 1e-10))
+        elif model_type == 'sklearn':
+            # sklearn model without pipeline: expects preprocessed features
+            # Prepare inputs
+            inputs = prepare_inputs(request.features, feature_info)
+
             # Convert feature dict to flat array matching feature_info order
             feature_names_ordered = sorted(feature_info.keys())
             X_list = []
+            n_samples = len(request.features)
             for feat_name in feature_names_ordered:
                 key = f"{feat_name}_input"
                 if key in inputs:
@@ -282,13 +308,14 @@ async def predict(request: PredictRequest):
                 else:
                     # Feature not provided, use default 0
                     X_list.append(np.zeros((n_samples, 1)))
-            
+
             X_array = np.hstack(X_list) if len(X_list) > 1 else X_list[0]
             predictions = model.predict_proba(X_array)[:, 1]  # Probability of class 1
             probas = predictions
             logits = np.log(probas / (1 - probas + 1e-10))
         else:
             # TensorFlow model
+            inputs = prepare_inputs(request.features, feature_info)
             predictions = model.predict(inputs, verbose=0)
             
             # Extract probabilities and logits

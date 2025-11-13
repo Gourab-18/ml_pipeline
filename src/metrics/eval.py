@@ -21,7 +21,21 @@ from sklearn.metrics import (
 )
 from sklearn.calibration import calibration_curve
 
-from .calibration import compute_ece, compute_brier_score
+from .calibration import compute_ece
+
+
+def compute_brier_score(y_true: np.ndarray, y_proba: np.ndarray) -> float:
+    """
+    Compute Brier score (mean squared error of probabilities).
+
+    Args:
+        y_true: True binary labels
+        y_proba: Predicted probabilities
+
+    Returns:
+        Brier score (lower is better, range [0, 1])
+    """
+    return float(np.mean((y_proba - y_true) ** 2))
 
 
 def compute_all_metrics(
